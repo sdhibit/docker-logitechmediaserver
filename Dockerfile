@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y --force-yes \
   locales \
   make \
   pkg-config \  
+  supervisor \
   wget
 
 # Install Logitech Media Server
@@ -58,8 +59,15 @@ RUN chown -R nobody:users /usr/share/squeezeboxserver/
 ENV LANG en_US.UTF-8
 RUN locale-gen $LANG
 
-# Copy start.sh script
-ADD start.sh /start.sh
+# Copy supervisor.conf script
+ADD supervisor.conf /etc/supervisor.conf
+
+ADD avahi.sh /opt/avahi.sh
+
+# Fix avahi-daemon not working without dbus
+#RUN sed -i -e "s#\#enable-dbus=yes#enable-dbus=false#g" /etc/avahi/avahi-daemon.conf
+
+WORKDIR /
 
  # apt clean
 RUN apt-get clean \
@@ -84,6 +92,5 @@ EXPOSE 3483/udp
 EXPOSE 5353/udp
 
 # Run Program
-USER nobody
-CMD ["/start.sh"]
+CMD ["supervisord", "-c", "/etc/supervisor.conf", "-n"]
 
